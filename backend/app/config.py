@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     max_single_file_size_mb: int = 2
     file_preview_limit: int = 200
 
+    chunk_preview_limit: int = 50
+    default_chunk_size_lines: int = 80
+    default_chunk_overlap_lines: int = 12
+
     model_config = SettingsConfigDict(
         env_file="backend/.env",
         env_file_encoding="utf-8",

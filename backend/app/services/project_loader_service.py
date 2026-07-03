@@ -82,7 +82,7 @@ BINARY_EXTENSIONS: set[str] = {
 }
 
 
-def _get_project_path(project_id: str, settings: Settings) -> Path:
+def get_project_path(project_id: str, settings: Settings) -> Path:
     project_path = settings.projects_path / project_id
 
     if not project_path.exists() or not project_path.is_dir():
@@ -94,11 +94,11 @@ def _get_project_path(project_id: str, settings: Settings) -> Path:
     return project_path
 
 
-def _to_relative_project_path(path: Path, settings: Settings) -> str:
+def to_relative_project_path(path: Path, settings: Settings) -> str:
     return str(path.relative_to(settings.project_root)).replace("\\", "/")
 
 
-def _to_relative_file_path(path: Path, project_path: Path) -> str:
+def to_relative_file_path(path: Path, project_path: Path) -> str:
     return str(path.relative_to(project_path)).replace("\\", "/")
 
 
@@ -135,10 +135,7 @@ def _looks_like_binary_file(path: Path, sample_size: int = 2048) -> bool:
     except OSError:
         return True
 
-    if b"\x00" in sample:
-        return True
-
-    return False
+    return b"\x00" in sample
 
 
 def _count_lines(path: Path) -> int | None:
@@ -149,37 +146,46 @@ def _count_lines(path: Path) -> int | None:
         return None
 
 
+def _create_skipped_file_metadata(
+    path: Path,
+    project_path: Path,
+    project_id: str,
+    skip_reason: str,
+    file_type: str = "unknown",
+) -> ProjectFileMetadata:
+    return ProjectFileMetadata(
+        project_id=project_id,
+        file_path=to_relative_file_path(path, project_path),
+        file_type=file_type,
+        extension=path.suffix.lower(),
+        size_bytes=path.stat().st_size,
+        line_count=None,
+        is_loadable=False,
+        skip_reason=skip_reason,
+    )
+
+
 def _inspect_file(
     path: Path,
     project_path: Path,
     project_id: str,
     settings: Settings,
 ) -> ProjectFileMetadata:
-    relative_path = _to_relative_file_path(path, project_path)
-    extension = path.suffix.lower()
     size_bytes = path.stat().st_size
 
     if path.name in EXCLUDED_FILE_NAMES:
-        return ProjectFileMetadata(
+        return _create_skipped_file_metadata(
+            path=path,
+            project_path=project_path,
             project_id=project_id,
-            file_path=relative_path,
-            file_type="unknown",
-            extension=extension,
-            size_bytes=size_bytes,
-            line_count=None,
-            is_loadable=False,
             skip_reason="excluded_file_name",
         )
 
     if size_bytes > settings.max_single_file_size_bytes:
-        return ProjectFileMetadata(
+        return _create_skipped_file_metadata(
+            path=path,
+            project_path=project_path,
             project_id=project_id,
-            file_path=relative_path,
-            file_type="unknown",
-            extension=extension,
-            size_bytes=size_bytes,
-            line_count=None,
-            is_loadable=False,
             skip_reason="file_too_large",
         )
 
@@ -188,7 +194,7 @@ def _inspect_file(
     if file_type is None:
         return ProjectFileMetadata(
             project_id=project_id,
-            file_path=relative_path,
+            file_path=to_relative_file_path(path, project_path),
             file_type="unknown",
             extension=detected_extension,
             size_bytes=size_bytes,
@@ -200,7 +206,7 @@ def _inspect_file(
     if _looks_like_binary_file(path):
         return ProjectFileMetadata(
             project_id=project_id,
-            file_path=relative_path,
+            file_path=to_relative_file_path(path, project_path),
             file_type=file_type,
             extension=detected_extension,
             size_bytes=size_bytes,
@@ -213,7 +219,7 @@ def _inspect_file(
 
     return ProjectFileMetadata(
         project_id=project_id,
-        file_path=relative_path,
+        file_path=to_relative_file_path(path, project_path),
         file_type=file_type,
         extension=detected_extension,
         size_bytes=size_bytes,
@@ -223,39 +229,30 @@ def _inspect_file(
     )
 
 
-def list_project_files(
+def discover_project_files(
     project_id: str,
     settings: Settings,
-) -> ProjectFilesResponse:
-    project_path = _get_project_path(project_id, settings)
+) -> tuple[Path, list[ProjectFileMetadata]]:
+    project_path = get_project_path(project_id, settings)
 
-    all_files: list[ProjectFileMetadata] = []
-    total_files_seen = 0
+    files: list[ProjectFileMetadata] = []
 
     for path in project_path.rglob("*"):
         if not path.is_file():
             continue
 
-        total_files_seen += 1
-
         if _is_inside_excluded_directory(path, project_path):
-            relative_path = _to_relative_file_path(path, project_path)
-
-            all_files.append(
-                ProjectFileMetadata(
+            files.append(
+                _create_skipped_file_metadata(
+                    path=path,
+                    project_path=project_path,
                     project_id=project_id,
-                    file_path=relative_path,
-                    file_type="unknown",
-                    extension=path.suffix.lower(),
-                    size_bytes=path.stat().st_size,
-                    line_count=None,
-                    is_loadable=False,
                     skip_reason="excluded_directory",
                 )
             )
             continue
 
-        all_files.append(
+        files.append(
             _inspect_file(
                 path=path,
                 project_path=project_path,
@@ -264,15 +261,26 @@ def list_project_files(
             )
         )
 
+    return project_path, files
+
+
+def list_project_files(
+    project_id: str,
+    settings: Settings,
+) -> ProjectFilesResponse:
+    project_path, all_files = discover_project_files(
+        project_id=project_id,
+        settings=settings,
+    )
+
     loadable_files = [file for file in all_files if file.is_loadable]
     skipped_files = [file for file in all_files if not file.is_loadable]
-
     files_preview = all_files[: settings.file_preview_limit]
 
     return ProjectFilesResponse(
         project_id=project_id,
-        project_path=_to_relative_project_path(project_path, settings),
-        total_files_seen=total_files_seen,
+        project_path=to_relative_project_path(project_path, settings),
+        total_files_seen=len(all_files),
         loadable_files_count=len(loadable_files),
         skipped_files_count=len(skipped_files),
         files=files_preview,
