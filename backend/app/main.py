@@ -1,3 +1,6 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from backend.app.api import (
@@ -13,6 +16,13 @@ from backend.app.api import (
 from backend.app.config import get_settings
 from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import configure_logging
+from backend.app.db.session import close_database_engine
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    yield
+    await close_database_engine()
 
 
 def create_app() -> FastAPI:
@@ -28,6 +38,7 @@ def create_app() -> FastAPI:
             "Agentic RAG system for codebases, documentation, "
             "code review, feature planning, and RAG evaluation."
         ),
+        lifespan=lifespan,
     )
 
     register_exception_handlers(app)

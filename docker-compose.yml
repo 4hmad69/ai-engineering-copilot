@@ -1,0 +1,22 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ai_copilot_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ai_copilot
+      POSTGRES_PASSWORD: ai_copilot_password
+      POSTGRES_DB: ai_copilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - ai_copilot_pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_copilot -d ai_copilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ai_copilot_pg_data:

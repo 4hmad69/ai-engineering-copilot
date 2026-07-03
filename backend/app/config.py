@@ -27,6 +27,18 @@ class Settings(BaseSettings):
     default_chunk_size_lines: int = 80
     default_chunk_overlap_lines: int = 12
 
+    postgres_user: str = "ai_copilot"
+    postgres_password: str = "ai_copilot_password"
+    postgres_db: str = "ai_copilot"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+
+    database_url: str = (
+        "postgresql+asyncpg://ai_copilot:ai_copilot_password"
+        "@localhost:5432/ai_copilot"
+    )
+    database_echo: bool = False
+
     model_config = SettingsConfigDict(
         env_file="backend/.env",
         env_file_encoding="utf-8",

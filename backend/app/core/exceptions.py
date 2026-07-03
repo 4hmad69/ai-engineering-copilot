@@ -33,6 +33,11 @@ class ResourceNotFoundError(AppError):
     code = "resource_not_found"
 
 
+class DatabaseConnectionError(AppError):
+    status_code = 503
+    code = "database_unavailable"
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error_handler(

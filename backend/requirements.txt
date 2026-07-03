@@ -4,3 +4,7 @@ pydantic
 pydantic-settings
 python-dotenv
 python-multipart
+
+sqlalchemy
+asyncpg
+psycopg[binary,pool]
