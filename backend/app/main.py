@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 
-from backend.app.api import chat, evaluation, health, planner, review, upload
+from backend.app.api import chat, evaluation, health, planner, projects, review, upload
 from backend.app.config import get_settings
+from backend.app.core.exceptions import register_exception_handlers
 from backend.app.core.logging import configure_logging
 
 
@@ -14,11 +15,17 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
-        description="Agentic RAG system for codebases, documentation, code review, feature planning, and RAG evaluation.",
+        description=(
+            "Agentic RAG system for codebases, documentation, "
+            "code review, feature planning, and RAG evaluation."
+        ),
     )
+
+    register_exception_handlers(app)
 
     app.include_router(health.router, prefix=settings.api_prefix, tags=["Health"])
     app.include_router(upload.router, prefix=settings.api_prefix, tags=["Upload"])
+    app.include_router(projects.router, prefix=settings.api_prefix, tags=["Projects"])
     app.include_router(chat.router, prefix=settings.api_prefix, tags=["Chat"])
     app.include_router(review.router, prefix=settings.api_prefix, tags=["Code Review"])
     app.include_router(planner.router, prefix=settings.api_prefix, tags=["Feature Planner"])
