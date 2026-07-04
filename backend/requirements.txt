@@ -8,3 +8,6 @@ python-multipart
 sqlalchemy
 asyncpg
 psycopg[binary,pool]
+pgvector
+
+sentence-transformers

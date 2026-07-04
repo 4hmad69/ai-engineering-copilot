@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     database_echo: bool = False
     database_schema: str = "ai_copilot"
 
+    embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    embedding_dimension: int = 384
+    embedding_batch_size: int = 16
+    search_preview_character_limit: int = 900
+
     model_config = SettingsConfigDict(
         env_file="backend/.env",
         env_file_encoding="utf-8",

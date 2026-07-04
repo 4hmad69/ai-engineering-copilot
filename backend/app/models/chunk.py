@@ -4,7 +4,8 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +24,7 @@ class ChunkRecord(Base):
         UniqueConstraint("project_id", "chunk_uid", name="uq_chunks_project_chunk_uid"),
         Index("ix_chunks_project_file_path", "project_id", "file_path"),
         Index("ix_chunks_project_file_lines", "project_id", "file_path", "start_line", "end_line"),
+        Index("ix_chunks_project_is_embedded", "project_id", "is_embedded"),
         {"schema": DB_SCHEMA},
     )
 
@@ -60,6 +62,11 @@ class ChunkRecord(Base):
 
     content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(384), nullable=True)
+    embedding_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    embedding_dimension: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    is_embedded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
