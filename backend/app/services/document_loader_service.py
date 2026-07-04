@@ -214,6 +214,23 @@ def _split_document_into_chunks(
     return chunks
 
 
+def split_loaded_documents_into_chunks(
+    documents: list[LoadedDocument],
+    request: ChunkingRequest,
+) -> list[PreparedChunk]:
+    chunks: list[PreparedChunk] = []
+
+    for document in documents:
+        chunks.extend(
+            _split_document_into_chunks(
+                document=document,
+                chunk_size_lines=request.chunk_size_lines,
+                overlap_lines=request.overlap_lines,
+            )
+        )
+
+    return chunks
+
 def prepare_project_chunks(
     project_id: str,
     request: ChunkingRequest,
@@ -226,16 +243,10 @@ def prepare_project_chunks(
         settings=settings,
     )
 
-    chunks: list[PreparedChunk] = []
-
-    for document in documents:
-        chunks.extend(
-            _split_document_into_chunks(
-                document=document,
-                chunk_size_lines=request.chunk_size_lines,
-                overlap_lines=request.overlap_lines,
-            )
-        )
+    chunks = split_loaded_documents_into_chunks(
+        documents=documents,
+        request=request,
+    )
 
     return project_path, chunks, len(documents)
 
@@ -278,3 +289,4 @@ def get_project_chunk_preview(
             for chunk in chunks_preview
         ],
     )
+

@@ -38,6 +38,7 @@ class Settings(BaseSettings):
         "@localhost:5432/ai_copilot"
     )
     database_echo: bool = False
+    database_schema: str = "ai_copilot"
 
     model_config = SettingsConfigDict(
         env_file="backend/.env",
