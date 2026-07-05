@@ -11,3 +11,5 @@ psycopg[binary,pool]
 pgvector
 
 sentence-transformers
+
+httpx

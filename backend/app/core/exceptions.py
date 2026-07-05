@@ -38,6 +38,11 @@ class DatabaseConnectionError(AppError):
     code = "database_unavailable"
 
 
+class LLMProviderError(AppError):
+    status_code = 502
+    code = "llm_provider_error"
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def app_error_handler(

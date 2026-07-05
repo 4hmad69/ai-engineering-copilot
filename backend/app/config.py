@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     embedding_batch_size: int = 16
     search_preview_character_limit: int = 900
 
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "qwen2.5-coder:3b"
+    ollama_timeout_seconds: int = 120
+    llm_temperature: float = 0.1
+
+    rag_default_top_k: int = 5
+    rag_max_context_characters: int = 12000
+    rag_context_chunk_preview_limit: int = 900
+
     model_config = SettingsConfigDict(
         env_file="backend/.env",
         env_file_encoding="utf-8",
