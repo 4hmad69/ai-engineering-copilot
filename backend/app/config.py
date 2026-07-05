@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     rag_max_context_characters: int = 12000
     rag_context_chunk_preview_limit: int = 900
 
+    rag_retrieval_candidate_k: int = 20
+    rag_mmr_lambda: float = 0.65
+    rag_min_answer_similarity: float = 0.15
+
     model_config = SettingsConfigDict(
         env_file="backend/.env",
         env_file_encoding="utf-8",
@@ -91,4 +95,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()   

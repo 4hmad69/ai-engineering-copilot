@@ -47,6 +47,47 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
         return parsed
 
 
+def _validate_rag_answer(raw_response: str) -> LLMRAGAnswer:
+    parsed_json = _extract_json_object(raw_response)
+
+    try:
+        return LLMRAGAnswer.model_validate(parsed_json)
+
+    except ValidationError as exc:
+        raise LLMProviderError(
+            "LLM response did not match the required RAG answer schema.",
+            details={
+                "validation_errors": exc.errors(),
+                "raw_response_preview": raw_response[:700],
+            },
+        ) from exc
+
+
+def _build_json_repair_prompt(raw_response: str) -> str:
+    return f"""
+The previous response did not match the required JSON schema.
+
+Repair it into valid JSON only.
+
+Required schema:
+{{
+  "answer": "string",
+  "confidence": "high | medium | low",
+  "missing_context": true,
+  "source_ids": [1],
+  "source_reasons": {{
+    "1": "string"
+  }},
+  "follow_up_questions": []
+}}
+
+Previous response:
+{raw_response[:2000]}
+
+Return only valid JSON.
+"""
+
+
 async def call_ollama_chat(
     system_prompt: str,
     user_prompt: str,
@@ -108,16 +149,17 @@ async def generate_structured_rag_answer(
         settings=settings,
     )
 
-    parsed_json = _extract_json_object(raw_response)
-
     try:
-        return LLMRAGAnswer.model_validate(parsed_json)
+        return _validate_rag_answer(raw_response)
 
-    except ValidationError as exc:
-        raise LLMProviderError(
-            "LLM response did not match the required RAG answer schema.",
-            details={
-                "validation_errors": exc.errors(),
-                "raw_response_preview": raw_response[:700],
-            },
-        ) from exc
+    except LLMProviderError:
+        repair_response = await call_ollama_chat(
+            system_prompt=(
+                "You repair malformed JSON. "
+                "Return only valid JSON matching the required schema."
+            ),
+            user_prompt=_build_json_repair_prompt(raw_response),
+            settings=settings,
+        )
+
+        return _validate_rag_answer(repair_response)

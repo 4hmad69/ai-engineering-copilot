@@ -1,24 +1,37 @@
-from backend.app.services.rag_retrieval_service import RetrievedChunk
+from typing import Protocol
+
+
+class PromptChunk(Protocol):
+    source_id: int
+    file_path: str
+    file_type: str
+    start_line: int
+    end_line: int
+    similarity_score: float
+    content: str
 
 
 SYSTEM_PROMPT = """
 You are AI Engineering Copilot, a senior software engineering assistant.
 
-You answer questions about a software project using only the provided retrieved context.
+You answer questions about a software project using only the retrieved context.
 
-Rules:
-1. Use only the context provided.
+Hard rules:
+1. Use only the retrieved context.
 2. Do not guess.
-3. If the context is not enough, set missing_context to true.
-4. Always reference the source IDs you used.
-5. Keep the answer practical and developer-friendly.
-6. Do not invent files, functions, APIs, dependencies, or line numbers.
-7. Return valid JSON only.
-8. Do not wrap JSON in markdown.
+3. Do not invent files, functions, APIs, dependencies, line numbers, or implementation details.
+4. If the retrieved context does not answer the question, set missing_context to true.
+5. If missing_context is true, explain what context is missing.
+6. Every factual claim about the code must be supported by one or more source_ids.
+7. source_ids must be numeric IDs from the retrieved context, for example [1, 2].
+8. Do not use source IDs that are not present in the retrieved context.
+9. Return valid JSON only.
+10. Do not wrap JSON in markdown.
+11. Do not include extra commentary outside JSON.
 """
 
 
-def build_rag_context(chunks: list[RetrievedChunk], max_characters: int) -> str:
+def build_rag_context(chunks: list[PromptChunk], max_characters: int) -> str:
     context_blocks: list[str] = []
     used_characters = 0
 
@@ -51,14 +64,20 @@ Retrieved context:
 
 Return JSON in this exact shape:
 {{
-  "answer": "Clear answer using only the retrieved context.",
+  "answer": "Answer the question using only the retrieved context. If context is missing, say what is missing.",
   "confidence": "high | medium | low",
-  "missing_context": true,
-  "source_ids": [1, 2],
+  "missing_context": false,
+  "source_ids": [1],
   "source_reasons": {{
-    "1": "Why this source was useful",
-    "2": "Why this source was useful"
+    "1": "Explain exactly why this source supports the answer."
   }},
   "follow_up_questions": []
 }}
+
+Important:
+- source_ids must only contain IDs from the retrieved context.
+- If the context does not contain the answer, use:
+  "missing_context": true
+  "confidence": "low"
+  "source_ids": []
 """
