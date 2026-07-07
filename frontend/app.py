@@ -11,6 +11,7 @@ import streamlit as st
 from frontend.config import get_frontend_settings
 from frontend.state import get_active_project_record, initialize_state
 from frontend.ui import render_project_summary
+from frontend.views.code_review_view import render_code_review_view
 from frontend.views.indexing_view import render_indexing_view
 from frontend.views.rag_chat_view import render_rag_chat_view
 from frontend.views.semantic_search_view import render_semantic_search_view
@@ -47,15 +48,16 @@ def main() -> None:
     st.title("AI Engineering Copilot")
     st.write(
         "Upload a codebase, prepare chunks and embeddings, search semantically, "
-        "and ask grounded RAG questions with citations."
+        "ask grounded RAG questions with citations, and review code changes."
     )
 
-    upload_tab, indexing_tab, search_tab, chat_tab = st.tabs(
+    upload_tab, indexing_tab, search_tab, chat_tab, review_tab = st.tabs(
         [
             "Upload Codebase",
             "Prepare Index",
             "Semantic Search",
             "RAG Chat",
+            "Code Review",
         ]
     )
 
@@ -70,6 +72,9 @@ def main() -> None:
 
     with chat_tab:
         render_rag_chat_view()
+
+    with review_tab:
+        render_code_review_view()
 
 
 if __name__ == "__main__":

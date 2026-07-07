@@ -216,3 +216,17 @@ def rag_chat(
             "retrieval_strategy": retrieval_strategy,
         },
     )
+
+def review_code(
+    code_or_diff: str,
+    review_focus: str | None = None,
+) -> dict[str, Any]:
+    client = get_api_client()
+
+    return client.post(
+        "/review/code",
+        json={
+            "code_or_diff": code_or_diff,
+            "review_focus": review_focus,
+        },
+    )

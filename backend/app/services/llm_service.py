@@ -1,15 +1,16 @@
 import json
 import re
-from typing import Any
+from typing import Any, TypeVar
 
 import httpx
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from backend.app.config import Settings
 from backend.app.core.exceptions import LLMProviderError
 from backend.app.schemas.rag_schema import LLMRAGAnswer
 
 JSON_OBJECT_PATTERN = re.compile(r"\{.*\}", re.DOTALL)
+TModel = TypeVar("TModel", bound=BaseModel)
 
 
 def _extract_json_object(raw_text: str) -> dict[str, Any]:
@@ -47,15 +48,18 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
         return parsed
 
 
-def _validate_rag_answer(raw_response: str) -> LLMRAGAnswer:
+def validate_json_response(
+    raw_response: str,
+    response_model: type[TModel],
+) -> TModel:
     parsed_json = _extract_json_object(raw_response)
 
     try:
-        return LLMRAGAnswer.model_validate(parsed_json)
+        return response_model.model_validate(parsed_json)
 
     except ValidationError as exc:
         raise LLMProviderError(
-            "LLM response did not match the required RAG answer schema.",
+            "LLM response did not match the required schema.",
             details={
                 "validation_errors": exc.errors(),
                 "raw_response_preview": raw_response[:700],
@@ -69,20 +73,8 @@ The previous response did not match the required JSON schema.
 
 Repair it into valid JSON only.
 
-Required schema:
-{{
-  "answer": "string",
-  "confidence": "high | medium | low",
-  "missing_context": true,
-  "source_ids": [1],
-  "source_reasons": {{
-    "1": "string"
-  }},
-  "follow_up_questions": []
-}}
-
 Previous response:
-{raw_response[:2000]}
+{raw_response[:2500]}
 
 Return only valid JSON.
 """
@@ -138,11 +130,12 @@ async def call_ollama_chat(
     return content
 
 
-async def generate_structured_rag_answer(
+async def generate_structured_response(
     system_prompt: str,
     user_prompt: str,
+    response_model: type[TModel],
     settings: Settings,
-) -> LLMRAGAnswer:
+) -> TModel:
     raw_response = await call_ollama_chat(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
@@ -150,16 +143,29 @@ async def generate_structured_rag_answer(
     )
 
     try:
-        return _validate_rag_answer(raw_response)
+        return validate_json_response(raw_response, response_model)
 
     except LLMProviderError:
         repair_response = await call_ollama_chat(
             system_prompt=(
                 "You repair malformed JSON. "
-                "Return only valid JSON matching the required schema."
+                "Return only valid JSON matching the user's required schema."
             ),
             user_prompt=_build_json_repair_prompt(raw_response),
             settings=settings,
         )
 
-        return _validate_rag_answer(repair_response)
+        return validate_json_response(repair_response, response_model)
+
+
+async def generate_structured_rag_answer(
+    system_prompt: str,
+    user_prompt: str,
+    settings: Settings,
+) -> LLMRAGAnswer:
+    return await generate_structured_response(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        response_model=LLMRAGAnswer,
+        settings=settings,
+    )
