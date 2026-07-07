@@ -28,7 +28,9 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
         if match is None:
             raise LLMProviderError(
                 "LLM did not return valid JSON.",
-                details={"raw_response_preview": raw_text[:500]},
+                details={
+                    "raw_response_preview": raw_text[:500],
+                },
             )
 
         try:
@@ -36,13 +38,17 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
         except json.JSONDecodeError as exc:
             raise LLMProviderError(
                 "LLM returned malformed JSON.",
-                details={"raw_response_preview": raw_text[:500]},
+                details={
+                    "raw_response_preview": raw_text[:500],
+                },
             ) from exc
 
         if not isinstance(parsed, dict):
             raise LLMProviderError(
                 "LLM response JSON was not an object.",
-                details={"raw_response_preview": raw_text[:500]},
+                details={
+                    "raw_response_preview": raw_text[:500],
+                },
             )
 
         return parsed
@@ -80,6 +86,15 @@ Return only valid JSON.
 """
 
 
+def _build_ollama_timeout(settings: Settings) -> httpx.Timeout:
+    return httpx.Timeout(
+        connect=10.0,
+        read=float(settings.ollama_timeout_seconds),
+        write=30.0,
+        pool=10.0,
+    )
+
+
 async def call_ollama_chat(
     system_prompt: str,
     user_prompt: str,
@@ -90,8 +105,14 @@ async def call_ollama_chat(
     payload = {
         "model": settings.ollama_model,
         "messages": [
-            {"role": "system", "content": system_prompt.strip()},
-            {"role": "user", "content": user_prompt.strip()},
+            {
+                "role": "system",
+                "content": system_prompt.strip(),
+            },
+            {
+                "role": "user",
+                "content": user_prompt.strip(),
+            },
         ],
         "stream": False,
         "format": "json",
@@ -100,10 +121,51 @@ async def call_ollama_chat(
         },
     }
 
+    timeout = _build_ollama_timeout(settings)
+
     try:
-        async with httpx.AsyncClient(timeout=settings.ollama_timeout_seconds) as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(url, json=payload)
             response.raise_for_status()
+
+    except httpx.TimeoutException as exc:
+        raise LLMProviderError(
+            "Ollama request timed out. The model may be too slow for the current prompt size.",
+            details={
+                "ollama_base_url": settings.ollama_base_url,
+                "model": settings.ollama_model,
+                "timeout_seconds": settings.ollama_timeout_seconds,
+                "hint": (
+                    "Increase OLLAMA_TIMEOUT_SECONDS, reduce top_k/candidate_k, "
+                    "reduce RAG_MAX_CONTEXT_CHARACTERS, or use a smaller model."
+                ),
+                "error_type": exc.__class__.__name__,
+            },
+        ) from exc
+
+    except httpx.ConnectError as exc:
+        raise LLMProviderError(
+            "Could not connect to Ollama. Make sure Ollama is running.",
+            details={
+                "ollama_base_url": settings.ollama_base_url,
+                "model": settings.ollama_model,
+                "hint": "Run: ollama serve",
+                "error_type": exc.__class__.__name__,
+            },
+        ) from exc
+
+    except httpx.HTTPStatusError as exc:
+        raise LLMProviderError(
+            "Ollama returned an HTTP error.",
+            details={
+                "ollama_base_url": settings.ollama_base_url,
+                "model": settings.ollama_model,
+                "status_code": exc.response.status_code,
+                "response_preview": exc.response.text[:700],
+                "hint": f"Run: ollama pull {settings.ollama_model}",
+                "error_type": exc.__class__.__name__,
+            },
+        ) from exc
 
     except httpx.HTTPError as exc:
         raise LLMProviderError(
@@ -116,7 +178,16 @@ async def call_ollama_chat(
             },
         ) from exc
 
-    data = response.json()
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise LLMProviderError(
+            "Ollama returned a non-JSON response.",
+            details={
+                "response_preview": response.text[:700],
+                "model": settings.ollama_model,
+            },
+        ) from exc
 
     message = data.get("message", {})
     content = message.get("content")
@@ -124,7 +195,10 @@ async def call_ollama_chat(
     if not isinstance(content, str) or not content.strip():
         raise LLMProviderError(
             "Ollama returned an empty response.",
-            details={"model": settings.ollama_model},
+            details={
+                "model": settings.ollama_model,
+                "response_preview": str(data)[:700],
+            },
         )
 
     return content
@@ -143,7 +217,10 @@ async def generate_structured_response(
     )
 
     try:
-        return validate_json_response(raw_response, response_model)
+        return validate_json_response(
+            raw_response=raw_response,
+            response_model=response_model,
+        )
 
     except LLMProviderError:
         repair_response = await call_ollama_chat(
@@ -155,7 +232,10 @@ async def generate_structured_response(
             settings=settings,
         )
 
-        return validate_json_response(repair_response, response_model)
+        return validate_json_response(
+            raw_response=repair_response,
+            response_model=response_model,
+        )
 
 
 async def generate_structured_rag_answer(

@@ -230,3 +230,26 @@ def review_code(
             "review_focus": review_focus,
         },
     )
+
+def plan_feature(
+    project_id: str,
+    feature_request: str,
+    planning_focus: str | None,
+    top_k: int,
+    candidate_k: int,
+    min_similarity: float,
+    retrieval_strategy: str,
+) -> dict[str, Any]:
+    client = get_api_client()
+
+    return client.post(
+        f"/planner/feature/{project_id}",
+        json={
+            "feature_request": feature_request,
+            "planning_focus": planning_focus,
+            "top_k": top_k,
+            "candidate_k": candidate_k,
+            "min_similarity": min_similarity,
+            "retrieval_strategy": retrieval_strategy,
+        },
+    )
