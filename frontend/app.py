@@ -13,6 +13,7 @@ from frontend.state import get_active_project_record, initialize_state
 from frontend.ui import render_project_summary
 from frontend.views.code_review_view import render_code_review_view
 from frontend.views.documentation_view import render_documentation_view
+from frontend.views.evaluation_view import render_evaluation_view
 from frontend.views.feature_planner_view import render_feature_planner_view
 from frontend.views.indexing_view import render_indexing_view
 from frontend.views.rag_chat_view import render_rag_chat_view
@@ -50,10 +51,20 @@ def main() -> None:
     st.title("AI Engineering Copilot")
     st.write(
         "Upload a codebase, prepare chunks and embeddings, search semantically, "
-        "ask grounded RAG questions, review code, plan features, and generate documentation."
+        "ask grounded RAG questions, review code, plan features, generate docs, "
+        "and evaluate RAG quality."
     )
 
-    upload_tab, indexing_tab, search_tab, chat_tab, review_tab, planner_tab, docs_tab = st.tabs(
+    (
+        upload_tab,
+        indexing_tab,
+        search_tab,
+        chat_tab,
+        review_tab,
+        planner_tab,
+        docs_tab,
+        evaluation_tab,
+    ) = st.tabs(
         [
             "Upload Codebase",
             "Prepare Index",
@@ -62,6 +73,7 @@ def main() -> None:
             "Code Review",
             "Feature Planner",
             "Documentation",
+            "Evaluation",
         ]
     )
 
@@ -85,6 +97,9 @@ def main() -> None:
 
     with docs_tab:
         render_documentation_view()
+
+    with evaluation_tab:
+        render_evaluation_view()
 
 
 if __name__ == "__main__":

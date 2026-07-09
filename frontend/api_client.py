@@ -278,3 +278,28 @@ def generate_documentation(
             "retrieval_strategy": retrieval_strategy,
         },
     )
+
+def run_evaluation(
+    project_id: str,
+    cases: list[dict[str, Any]],
+    mode: str,
+    top_k: int,
+    candidate_k: int,
+    min_similarity: float,
+    retrieval_strategy: str,
+    keyword_match_threshold: float,
+) -> dict[str, Any]:
+    client = get_api_client()
+
+    return client.post(
+        f"/evaluation/run/{project_id}",
+        json={
+            "cases": cases,
+            "mode": mode,
+            "top_k": top_k,
+            "candidate_k": candidate_k,
+            "min_similarity": min_similarity,
+            "retrieval_strategy": retrieval_strategy,
+            "keyword_match_threshold": keyword_match_threshold,
+        },
+    )
