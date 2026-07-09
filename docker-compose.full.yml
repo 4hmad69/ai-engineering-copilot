@@ -1,0 +1,84 @@
+name: ai-engineering-copilot
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ai_copilot_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ai_copilot
+      POSTGRES_PASSWORD: ai_copilot_password
+      POSTGRES_DB: ai_copilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - ai_copilot_pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_copilot -d ai_copilot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ai_copilot_backend
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      PYTHONPATH: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=5).read()"
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: ai_copilot_frontend
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      PYTHONPATH: /app
+    ports:
+      - "8501:8501"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=5).read()"
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  ai_copilot_pg_data:

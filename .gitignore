@@ -47,3 +47,7 @@ uploads/
 
 # Streamlit
 .streamlit/secrets.toml
+
+.env.docker
+.env.docker.local
+storage/
