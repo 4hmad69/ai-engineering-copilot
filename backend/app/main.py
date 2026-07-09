@@ -1,10 +1,10 @@
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from backend.app.api import (
     chat,
+    documentation,
     documents,
     evaluation,
     health,
@@ -21,24 +21,20 @@ from backend.app.db.session import close_database_engine
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI):
     yield
     await close_database_engine()
 
 
 def create_app() -> FastAPI:
-    configure_logging()
-
     settings = get_settings()
+
+    configure_logging()
 
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
         debug=settings.debug,
-        description=(
-            "Agentic RAG system for codebases, documentation, "
-            "code review, feature planning, and RAG evaluation."
-        ),
         lifespan=lifespan,
     )
 
@@ -50,8 +46,13 @@ def create_app() -> FastAPI:
     app.include_router(documents.router, prefix=settings.api_prefix, tags=["Documents"])
     app.include_router(search.router, prefix=settings.api_prefix, tags=["Search"])
     app.include_router(chat.router, prefix=settings.api_prefix, tags=["Chat"])
-    app.include_router(review.router, prefix=settings.api_prefix, tags=["Code Review"])
-    app.include_router(planner.router, prefix=settings.api_prefix, tags=["Feature Planner"])
+    app.include_router(review.router, prefix=settings.api_prefix, tags=["Review"])
+    app.include_router(planner.router, prefix=settings.api_prefix, tags=["Planner"])
+    app.include_router(
+        documentation.router,
+        prefix=settings.api_prefix,
+        tags=["Documentation"],
+    )
     app.include_router(evaluation.router, prefix=settings.api_prefix, tags=["Evaluation"])
 
     return app

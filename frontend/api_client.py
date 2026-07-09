@@ -253,3 +253,28 @@ def plan_feature(
             "retrieval_strategy": retrieval_strategy,
         },
     )
+
+def generate_documentation(
+    project_id: str,
+    documentation_type: str,
+    audience: str,
+    extra_instructions: str | None,
+    top_k: int,
+    candidate_k: int,
+    min_similarity: float,
+    retrieval_strategy: str,
+) -> dict[str, Any]:
+    client = get_api_client()
+
+    return client.post(
+        f"/documentation/generate/{project_id}",
+        json={
+            "documentation_type": documentation_type,
+            "audience": audience,
+            "extra_instructions": extra_instructions,
+            "top_k": top_k,
+            "candidate_k": candidate_k,
+            "min_similarity": min_similarity,
+            "retrieval_strategy": retrieval_strategy,
+        },
+    )
