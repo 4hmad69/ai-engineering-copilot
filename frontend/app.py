@@ -1,105 +1,65 @@
-from pathlib import Path
+from __future__ import annotations
+
 import sys
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+from pathlib import Path
 
 import streamlit as st
 
-from frontend.config import get_frontend_settings
-from frontend.state import get_active_project_record, initialize_state
-from frontend.ui import render_project_summary
-from frontend.views.code_review_view import render_code_review_view
-from frontend.views.documentation_view import render_documentation_view
-from frontend.views.evaluation_view import render_evaluation_view
-from frontend.views.feature_planner_view import render_feature_planner_view
-from frontend.views.indexing_view import render_indexing_view
-from frontend.views.rag_chat_view import render_rag_chat_view
-from frontend.views.semantic_search_view import render_semantic_search_view
-from frontend.views.upload_view import render_upload_view
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from frontend.components.sidebar import render_sidebar
+from frontend.utils.config import get_settings
+from frontend.utils.session import initialize_session_state
+from frontend.views.code_review import render_code_review
+from frontend.views.dashboard import render_dashboard
+from frontend.views.documentation import render_documentation
+from frontend.views.evaluation import render_evaluation
+from frontend.views.feature_planner import render_feature_planner
+from frontend.views.help import render_help
+from frontend.views.rag_chat import render_rag_chat
+from frontend.views.semantic_search import render_semantic_search
+from frontend.views.upload_index import render_upload_index
 
 
-def render_sidebar() -> None:
-    settings = get_frontend_settings()
-
-    st.sidebar.title("AI Engineering Copilot")
-    st.sidebar.caption("Agentic RAG for codebases and developer workflows")
-
-    st.sidebar.divider()
-
-    st.sidebar.write("Backend API")
-    st.sidebar.code(settings.api_base_url)
-
-    st.sidebar.divider()
-
-    st.sidebar.subheader("Active Project")
-    render_project_summary(get_active_project_record())
+def _load_css() -> None:
+    css_path = PROJECT_ROOT / "frontend" / "styles" / "custom.css"
+    if css_path.exists():
+        st.markdown(
+            f"<style>{css_path.read_text(encoding='utf-8')}</style>",
+            unsafe_allow_html=True,
+        )
 
 
 def main() -> None:
+    settings = get_settings()
+
     st.set_page_config(
-        page_title="AI Engineering Copilot",
-        page_icon="🤖",
+        page_title=settings.app_name,
+        page_icon="AI",
         layout="wide",
+        initial_sidebar_state="expanded",
     )
 
-    initialize_state()
-    render_sidebar()
+    _load_css()
+    initialize_session_state()
 
-    st.title("AI Engineering Copilot")
-    st.write(
-        "Upload a codebase, prepare chunks and embeddings, search semantically, "
-        "ask grounded RAG questions, review code, plan features, generate docs, "
-        "and evaluate RAG quality."
-    )
+    selected_page = render_sidebar()
 
-    (
-        upload_tab,
-        indexing_tab,
-        search_tab,
-        chat_tab,
-        review_tab,
-        planner_tab,
-        docs_tab,
-        evaluation_tab,
-    ) = st.tabs(
-        [
-            "Upload Codebase",
-            "Prepare Index",
-            "Semantic Search",
-            "RAG Chat",
-            "Code Review",
-            "Feature Planner",
-            "Documentation",
-            "Evaluation",
-        ]
-    )
+    page_renderers = {
+        "Dashboard": render_dashboard,
+        "Upload & Index": render_upload_index,
+        "Semantic Search": render_semantic_search,
+        "RAG Chat": render_rag_chat,
+        "Code Review": render_code_review,
+        "Feature Planner": render_feature_planner,
+        "Documentation": render_documentation,
+        "Evaluation": render_evaluation,
+        "Help": render_help,
+    }
 
-    with upload_tab:
-        render_upload_view()
-
-    with indexing_tab:
-        render_indexing_view()
-
-    with search_tab:
-        render_semantic_search_view()
-
-    with chat_tab:
-        render_rag_chat_view()
-
-    with review_tab:
-        render_code_review_view()
-
-    with planner_tab:
-        render_feature_planner_view()
-
-    with docs_tab:
-        render_documentation_view()
-
-    with evaluation_tab:
-        render_evaluation_view()
+    page_renderers.get(selected_page, render_dashboard)()
 
 
 if __name__ == "__main__":

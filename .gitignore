@@ -51,3 +51,6 @@ uploads/
 .env.docker
 .env.docker.local
 storage/
+
+# Frontend
+frontend/.env

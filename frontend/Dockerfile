@@ -12,8 +12,7 @@ RUN useradd --create-home --shell /bin/bash appuser
 
 COPY frontend/requirements.txt /app/frontend/requirements.txt
 
-RUN python -m pip install --upgrade pip setuptools wheel \
-    && python -m pip install -r /app/frontend/requirements.txt
+RUN python -m pip install --upgrade pip setuptools wheel     && python -m pip install -r /app/frontend/requirements.txt
 
 COPY --chown=appuser:appuser frontend /app/frontend
 
@@ -23,7 +22,4 @@ USER appuser
 
 EXPOSE 8501
 
-CMD streamlit run frontend/app.py \
-    --server.address=0.0.0.0 \
-    --server.port=8501 \
-    --browser.gatherUsageStats=false
+CMD ["streamlit", "run", "frontend/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--browser.gatherUsageStats=false"]
