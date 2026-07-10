@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 import streamlit as st
 
 from frontend.components.badges import render_status_badge

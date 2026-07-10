@@ -9,8 +9,6 @@ if not exist "backend\.venv\Scripts\python.exe" (
     echo.
     echo ERROR: Python virtual environment was not found.
     echo Expected: backend\.venv\Scripts\python.exe
-    echo.
-    echo Create it first or confirm the virtual environment path.
     exit /b 1
 )
 
@@ -21,6 +19,7 @@ if not exist "frontend\app.py" (
     exit /b 1
 )
 
+set "PYTHONPATH=%CD%"
 set "FRONTEND_APP_NAME=AI Engineering Copilot"
 set "FRONTEND_API_BASE_URL=http://127.0.0.1:8000/api/v1"
 set "FRONTEND_REQUEST_TIMEOUT_SECONDS=300"

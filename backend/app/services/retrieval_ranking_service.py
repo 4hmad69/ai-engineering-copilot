@@ -24,7 +24,9 @@ def dot_product(left: list[float], right: list[float]) -> float:
     if len(left) != len(right):
         return 0.0
 
-    return sum(left_value * right_value for left_value, right_value in zip(left, right, strict=True))
+    return sum(
+        left_value * right_value for left_value, right_value in zip(left, right, strict=True)
+    )
 
 
 def select_mmr_candidates(
@@ -67,9 +69,7 @@ def select_mmr_candidates(
                 for selected_candidate in selected
             )
 
-            mmr_score = (lambda_mult * relevance_score) - (
-                (1.0 - lambda_mult) * diversity_penalty
-            )
+            mmr_score = (lambda_mult * relevance_score) - ((1.0 - lambda_mult) * diversity_penalty)
 
             if mmr_score > best_score:
                 best_score = mmr_score

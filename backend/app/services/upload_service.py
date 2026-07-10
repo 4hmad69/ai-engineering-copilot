@@ -232,4 +232,3 @@ async def ingest_codebase_upload(
 def cleanup_project_storage(project_id: str, settings: Settings) -> None:
     shutil.rmtree(settings.uploads_path / project_id, ignore_errors=True)
     shutil.rmtree(settings.projects_path / project_id, ignore_errors=True)
-

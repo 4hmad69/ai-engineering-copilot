@@ -6,7 +6,12 @@ from frontend.components.empty_states import render_project_required
 from frontend.components.header import render_page_header
 from frontend.components.renderers import render_api_error, render_json_debug, render_sources
 from frontend.services.api_client import APIClientError, generate_documentation
-from frontend.utils.session import add_activity, get_active_project_id, get_last_result, set_last_result
+from frontend.utils.session import (
+    add_activity,
+    get_active_project_id,
+    get_last_result,
+    set_last_result,
+)
 from frontend.utils.validators import validate_candidate_k, validate_min_length
 
 

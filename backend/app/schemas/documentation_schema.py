@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from backend.app.schemas.rag_schema import RAGRetrievalDiagnostics, RetrievalStrategy
 
-
 DocumentationType = Literal["readme", "architecture", "api", "onboarding"]
 
 

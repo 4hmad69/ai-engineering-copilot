@@ -5,7 +5,6 @@ from sqlalchemy import text
 from backend.app.config import get_settings
 from backend.app.db.base import Base
 from backend.app.db.session import close_database_engine, get_database_engine
-from backend.app.models import ChunkRecord, DocumentRecord, ProjectRecord
 
 
 def _validate_schema_name(schema_name: str) -> str:

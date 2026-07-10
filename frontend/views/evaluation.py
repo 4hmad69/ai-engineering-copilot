@@ -9,7 +9,12 @@ from frontend.components.header import render_page_header
 from frontend.components.renderers import render_api_error, render_json_debug
 from frontend.services.api_client import APIClientError, run_evaluation
 from frontend.utils.formatters import format_percentage
-from frontend.utils.session import add_activity, get_active_project_id, get_last_result, set_last_result
+from frontend.utils.session import (
+    add_activity,
+    get_active_project_id,
+    get_last_result,
+    set_last_result,
+)
 from frontend.utils.validators import parse_json_list, validate_candidate_k
 
 

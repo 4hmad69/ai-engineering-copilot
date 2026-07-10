@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Any, TypeVar
+from typing import Any
 
 import httpx
 from pydantic import BaseModel, ValidationError
@@ -10,7 +10,6 @@ from backend.app.core.exceptions import LLMProviderError
 from backend.app.schemas.rag_schema import LLMRAGAnswer
 
 JSON_OBJECT_PATTERN = re.compile(r"\{.*\}", re.DOTALL)
-TModel = TypeVar("TModel", bound=BaseModel)
 
 
 def _extract_json_object(raw_text: str) -> dict[str, Any]:
@@ -18,7 +17,12 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
         parsed = json.loads(raw_text)
 
         if not isinstance(parsed, dict):
-            raise ValueError("LLM response JSON was not an object.")
+            raise LLMProviderError(
+                "LLM response JSON was not an object.",
+                details={
+                    "raw_response_preview": raw_text[:500],
+                },
+            )
 
         return parsed
 
@@ -31,7 +35,7 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
                 details={
                     "raw_response_preview": raw_text[:500],
                 },
-            )
+            ) from None
 
         try:
             parsed = json.loads(match.group(0))
@@ -49,12 +53,12 @@ def _extract_json_object(raw_text: str) -> dict[str, Any]:
                 details={
                     "raw_response_preview": raw_text[:500],
                 },
-            )
+            ) from None
 
         return parsed
 
 
-def validate_json_response(
+def validate_json_response[TModel: BaseModel](
     raw_response: str,
     response_model: type[TModel],
 ) -> TModel:
@@ -136,7 +140,7 @@ async def call_ollama_chat(
                 "model": settings.ollama_model,
                 "timeout_seconds": settings.ollama_timeout_seconds,
                 "hint": (
-                    "Increase OLLAMA_TIMEOUT_SECONDS, reduce top_k/candidate_k, "
+                    "Increase OLLAMA_TIMEOUT_SECONDS, reduce top_k or candidate_k, "
                     "reduce RAG_MAX_CONTEXT_CHARACTERS, or use a smaller model."
                 ),
                 "error_type": exc.__class__.__name__,
@@ -182,14 +186,33 @@ async def call_ollama_chat(
         data = response.json()
     except ValueError as exc:
         raise LLMProviderError(
-            "Ollama returned a non-JSON response.",
+            "Ollama returned a non-JSON HTTP response.",
             details={
                 "response_preview": response.text[:700],
                 "model": settings.ollama_model,
             },
         ) from exc
 
+    if not isinstance(data, dict):
+        raise LLMProviderError(
+            "Ollama returned an unexpected response structure.",
+            details={
+                "response_preview": str(data)[:700],
+                "model": settings.ollama_model,
+            },
+        )
+
     message = data.get("message", {})
+
+    if not isinstance(message, dict):
+        raise LLMProviderError(
+            "Ollama response did not contain a valid message object.",
+            details={
+                "response_preview": str(data)[:700],
+                "model": settings.ollama_model,
+            },
+        )
+
     content = message.get("content")
 
     if not isinstance(content, str) or not content.strip():
@@ -201,10 +224,10 @@ async def call_ollama_chat(
             },
         )
 
-    return content
+    return content.strip()
 
 
-async def generate_structured_response(
+async def generate_structured_response[TModel: BaseModel](
     system_prompt: str,
     user_prompt: str,
     response_model: type[TModel],
@@ -225,8 +248,8 @@ async def generate_structured_response(
     except LLMProviderError:
         repair_response = await call_ollama_chat(
             system_prompt=(
-                "You repair malformed JSON. "
-                "Return only valid JSON matching the user's required schema."
+                "You repair malformed JSON responses. "
+                "Return only valid JSON matching the schema described by the user."
             ),
             user_prompt=_build_json_repair_prompt(raw_response),
             settings=settings,

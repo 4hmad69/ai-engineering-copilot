@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from backend.app.schemas.rag_schema import RAGRetrievalDiagnostics, RetrievalStrategy
 
-
 ComplexityLevel = Literal["low", "medium", "high"]
 
 API_CHANGE_STRING_PATTERN = re.compile(
@@ -22,8 +21,7 @@ class FeaturePlanRequest(BaseModel):
         default=None,
         max_length=700,
         description=(
-            "Optional planning focus, such as security, database design, "
-            "tests, or API design."
+            "Optional planning focus, such as security, database design, tests, or API design."
         ),
     )
     top_k: int = Field(default=7, ge=1, le=15)

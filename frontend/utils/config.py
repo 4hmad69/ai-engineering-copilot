@@ -27,9 +27,7 @@ def get_settings() -> FrontendSettings:
             "FRONTEND_API_BASE_URL",
             "http://127.0.0.1:8000/api/v1",
         ).rstrip("/"),
-        request_timeout_seconds=float(
-            os.getenv("FRONTEND_REQUEST_TIMEOUT_SECONDS", "300")
-        ),
+        request_timeout_seconds=float(os.getenv("FRONTEND_REQUEST_TIMEOUT_SECONDS", "300")),
         max_chat_messages=max(
             10,
             int(os.getenv("FRONTEND_MAX_CHAT_MESSAGES", "40")),

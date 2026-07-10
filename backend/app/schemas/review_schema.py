@@ -2,7 +2,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 ReviewSeverity = Literal["low", "medium", "high", "critical"]
 ReviewCategory = Literal[
     "bug",
@@ -23,8 +22,7 @@ class CodeReviewRequest(BaseModel):
         default=None,
         max_length=500,
         description=(
-            "Optional review focus, such as security, bugs, tests, "
-            "or FastAPI best practices."
+            "Optional review focus, such as security, bugs, tests, or FastAPI best practices."
         ),
     )
 

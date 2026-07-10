@@ -1,6 +1,6 @@
 from backend.app.config import Settings
 from backend.app.schemas.rag_schema import LLMRAGAnswer, RAGRetrievalDiagnostics, RAGSource
-from backend.app.services.rag_retrieval_service import RetrievedChunk, RetrievalResult
+from backend.app.services.rag_retrieval_service import RetrievalResult, RetrievedChunk
 
 
 def preview_text(text: str, limit: int) -> str:
@@ -39,9 +39,7 @@ def build_sources_from_llm_selection(
     chunk_by_source_id = {chunk.source_id: chunk for chunk in chunks}
 
     valid_source_ids = [
-        source_id
-        for source_id in llm_answer.source_ids
-        if source_id in chunk_by_source_id
+        source_id for source_id in llm_answer.source_ids if source_id in chunk_by_source_id
     ]
 
     if not valid_source_ids and chunks and not llm_answer.missing_context:

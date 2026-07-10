@@ -6,7 +6,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.config import Settings
-from backend.app.core.exceptions import DatabaseConnectionError, InvalidInputError, ResourceNotFoundError
+from backend.app.core.exceptions import (
+    DatabaseConnectionError,
+    InvalidInputError,
+    ResourceNotFoundError,
+)
 from backend.app.models.chunk import ChunkRecord
 from backend.app.models.document import DocumentRecord
 from backend.app.models.project import ProjectRecord
@@ -111,9 +115,7 @@ async def persist_project_documents_and_chunks(
                     details={"project_id": project_id},
                 )
 
-            await session.execute(
-                delete(ChunkRecord).where(ChunkRecord.project_id == project_uuid)
-            )
+            await session.execute(delete(ChunkRecord).where(ChunkRecord.project_id == project_uuid))
             await session.execute(
                 delete(DocumentRecord).where(DocumentRecord.project_id == project_uuid)
             )

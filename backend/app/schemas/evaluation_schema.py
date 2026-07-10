@@ -8,7 +8,6 @@ from backend.app.schemas.rag_schema import (
     RetrievalStrategy,
 )
 
-
 EvaluationMode = Literal["retrieval", "rag"]
 
 
