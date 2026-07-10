@@ -376,8 +376,3 @@ Docker frontend:
 FRONTEND_API_BASE_URL=http://backend:8000/api/v1
 ```
 
-## Current Release
-
-`v1.0.0`
-
-The first portfolio-ready release includes ingestion, vector search, RAG chat, code review, feature planning, documentation generation, evaluation, Docker deployment, automated tests, and a GPT-style frontend.
