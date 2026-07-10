@@ -16,8 +16,7 @@ def test_health_endpoint() -> None:
     assert payload["status"] == "ok"
     assert payload["app_name"] == "AI Engineering Copilot"
     assert payload["app_env"] in {"development", "testing", "production"}
-    assert isinstance(payload["app_version"], str)
-    assert payload["app_version"]
+    assert payload["app_version"] == "1.0.0"
 
 
 @pytest.mark.parametrize(
