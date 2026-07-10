@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from statistics import mean
-from typing import Iterable
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -106,9 +106,7 @@ def _build_failure_reasons(
         failure_reasons.append("No chunks were retrieved.")
 
     if expected_files and expected_files_missing:
-        failure_reasons.append(
-            "One or more expected files were not found in retrieved sources."
-        )
+        failure_reasons.append("One or more expected files were not found in retrieved sources.")
 
     if mode == "rag" and missing_context:
         failure_reasons.append("RAG answer reported missing context.")
@@ -249,22 +247,17 @@ def _build_summary(results: list[EvaluationCaseResult]) -> EvaluationSummary:
     passed_cases = sum(1 for result in results if result.passed)
     failed_cases = total_cases - passed_cases
 
-    retrieval_results = [
-        result for result in results if result.retrieval_hit is not None
-    ]
+    retrieval_results = [result for result in results if result.retrieval_hit is not None]
 
     retrieval_hit_rate = None
 
     if retrieval_results:
         retrieval_hit_rate = round(
-            sum(1 for result in retrieval_results if result.retrieval_hit)
-            / len(retrieval_results),
+            sum(1 for result in retrieval_results if result.retrieval_hit) / len(retrieval_results),
             4,
         )
 
-    generated_answers_count = sum(
-        1 for result in results if result.answer is not None
-    )
+    generated_answers_count = sum(1 for result in results if result.answer is not None)
 
     return EvaluationSummary(
         total_cases=total_cases,
@@ -272,12 +265,8 @@ def _build_summary(results: list[EvaluationCaseResult]) -> EvaluationSummary:
         failed_cases=failed_cases,
         pass_rate=round(passed_cases / total_cases, 4) if total_cases else 0.0,
         retrieval_hit_rate=retrieval_hit_rate,
-        average_top_similarity=_safe_average(
-            result.top_similarity for result in results
-        ),
-        average_keyword_coverage=_safe_average(
-            result.keyword_coverage for result in results
-        ),
+        average_top_similarity=_safe_average(result.top_similarity for result in results),
+        average_keyword_coverage=_safe_average(result.keyword_coverage for result in results),
         generated_answers_count=generated_answers_count,
     )
 

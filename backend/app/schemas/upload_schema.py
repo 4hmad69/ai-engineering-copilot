@@ -9,8 +9,12 @@ class ExtractedFileSummary(BaseModel):
 class UploadCodebaseResponse(BaseModel):
     project_id: str = Field(..., description="Unique ID assigned to this uploaded project")
     original_filename: str = Field(..., description="Original uploaded archive filename")
-    saved_archive_path: str = Field(..., description="Relative path where the ZIP archive was saved")
-    extracted_project_path: str = Field(..., description="Relative path where the project was extracted")
+    saved_archive_path: str = Field(
+        ..., description="Relative path where the ZIP archive was saved"
+    )
+    extracted_project_path: str = Field(
+        ..., description="Relative path where the project was extracted"
+    )
     upload_size_bytes: int = Field(..., description="Size of uploaded ZIP archive in bytes")
     extracted_files_count: int = Field(..., description="Number of files extracted from the ZIP")
     files_preview: list[ExtractedFileSummary] = Field(

@@ -2,7 +2,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-
 ConfidenceLevel = Literal["high", "medium", "low"]
 RetrievalStrategy = Literal["similarity", "mmr"]
 

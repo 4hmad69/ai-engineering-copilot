@@ -13,11 +13,7 @@ def render_metric_card(
     value: Any,
     helper: str | None = None,
 ) -> None:
-    helper_html = (
-        f'<div class="metric-helper">{escape(helper)}</div>'
-        if helper
-        else ""
-    )
+    helper_html = f'<div class="metric-helper">{escape(helper)}</div>' if helper else ""
     st.markdown(
         f"""
         <div class="metric-shell">

@@ -7,7 +7,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.config import Settings
-from backend.app.core.exceptions import DatabaseConnectionError, InvalidInputError, ResourceNotFoundError
+from backend.app.core.exceptions import (
+    DatabaseConnectionError,
+    InvalidInputError,
+    ResourceNotFoundError,
+)
 from backend.app.models.chunk import ChunkRecord
 from backend.app.models.project import ProjectRecord
 from backend.app.schemas.rag_schema import RetrievalStrategy

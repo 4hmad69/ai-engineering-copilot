@@ -1,4 +1,4 @@
-# Python
+# Python cache and compiled files
 __pycache__/
 *.py[cod]
 *.pyo
@@ -7,18 +7,28 @@ __pycache__/
 
 # Virtual environments
 .venv/
+backend/.venv/
 venv/
 env/
 
-# Environment variables
+# Environment variables and secrets
 .env
 backend/.env
+frontend/.env
+.env.docker
+.env.docker.local
 
-# IDE
+# Keep environment templates in Git
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+!.env.docker.example
+
+# IDE settings
 .vscode/
 .idea/
 
-# OS files
+# Operating system files
 .DS_Store
 Thumbs.db
 
@@ -26,31 +36,27 @@ Thumbs.db
 *.log
 logs/
 
-# Test/cache files
+# Test, lint, and coverage files
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
+coverage.xml
 htmlcov/
 
-# Build files
+# Build and package files
 build/
 dist/
 *.egg-info/
 
-# Project storage
+# Project-generated storage
 storage/
 uploads/
+backend/storage/
 
-# Docker
+# Docker runtime files
 *.pid
 
-# Streamlit
+# Streamlit secrets
 .streamlit/secrets.toml
-
-.env.docker
-.env.docker.local
-storage/
-
-# Frontend
-frontend/.env
+frontend/.streamlit/secrets.toml

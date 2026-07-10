@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "AI Engineering Copilot"
     app_env: str = "development"
-    app_version: str = "0.1.0"
+    app_version: str = "1.0.0"
     debug: bool = True
 
     api_prefix: str = "/api/v1"
@@ -34,8 +34,7 @@ class Settings(BaseSettings):
     postgres_port: int = 5432
 
     database_url: str = (
-        "postgresql+asyncpg://ai_copilot:ai_copilot_password"
-        "@localhost:5432/ai_copilot"
+        "postgresql+asyncpg://ai_copilot:ai_copilot_password@localhost:5432/ai_copilot"
     )
     database_echo: bool = False
     database_schema: str = "ai_copilot"
@@ -95,4 +94,4 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()   
+    return Settings()

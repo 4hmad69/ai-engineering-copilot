@@ -148,7 +148,6 @@ class APIClient:
         return self.request("POST", path, json_body=json_body, files=files)
 
 
-
 def get_api_client() -> APIClient:
     settings = get_settings()
     return APIClient(

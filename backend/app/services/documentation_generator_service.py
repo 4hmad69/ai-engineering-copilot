@@ -68,9 +68,7 @@ def _build_documentation_sources(
     chunk_by_source_id = {chunk.source_id: chunk for chunk in chunks}
 
     valid_source_ids = [
-        source_id
-        for source_id in llm_response.source_ids
-        if source_id in chunk_by_source_id
+        source_id for source_id in llm_response.source_ids if source_id in chunk_by_source_id
     ]
 
     if not valid_source_ids and chunks and not llm_response.missing_context:

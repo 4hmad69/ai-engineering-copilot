@@ -3,10 +3,14 @@ from uuid import UUID
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.core.exceptions import DatabaseConnectionError, InvalidInputError, ResourceNotFoundError
+from backend.app.core.exceptions import (
+    DatabaseConnectionError,
+    InvalidInputError,
+    ResourceNotFoundError,
+)
 from backend.app.models.project import ProjectRecord
 from backend.app.schemas.persistence_schema import ProjectRecordResponse
-from backend.app.schemas.upload_schema import UploadCodebaseResponse    
+from backend.app.schemas.upload_schema import UploadCodebaseResponse
 
 
 def _parse_project_uuid(project_id: str) -> UUID:

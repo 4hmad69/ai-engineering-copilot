@@ -4,8 +4,8 @@ from pathlib import Path
 
 from backend.app.config import Settings
 from backend.app.schemas.document_schema import (
-    ChunkPreviewResponse,
     ChunkingRequest,
+    ChunkPreviewResponse,
     DocumentChunkPreview,
     LoadedDocumentMetadata,
     LoadedDocumentsResponse,
@@ -132,10 +132,7 @@ def get_loaded_documents_summary(
         settings=settings,
     )
 
-    document_metadata = [
-        _metadata_to_loaded_document_response(document)
-        for document in documents
-    ]
+    document_metadata = [_metadata_to_loaded_document_response(document) for document in documents]
 
     return LoadedDocumentsResponse(
         project_id=project_id,
@@ -231,6 +228,7 @@ def split_loaded_documents_into_chunks(
 
     return chunks
 
+
 def prepare_project_chunks(
     project_id: str,
     request: ChunkingRequest,
@@ -289,4 +287,3 @@ def get_project_chunk_preview(
             for chunk in chunks_preview
         ],
     )
-

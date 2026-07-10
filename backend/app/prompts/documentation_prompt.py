@@ -21,7 +21,9 @@ def build_documentation_prompt(
     extra_instructions: str | None,
     context: str,
 ) -> str:
-    instruction_text = extra_instructions or "Generate accurate documentation from the available context."
+    instruction_text = (
+        extra_instructions or "Generate accurate documentation from the available context."
+    )
 
     return f"""
 Documentation type:
